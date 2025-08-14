@@ -2,8 +2,8 @@ CC=vc
 VASM=vasmm68k_mot
 VLINK=vlink
 LDFLAGS=-stdlib
-CONFIG=+aos68k
-ODIR=build-vbcc
+CONFIG=+kick13
+ODIR=build
 
 EXE=uae/dh0/hello
 _OBJ=hello.o mul_by_ten.o
@@ -15,13 +15,16 @@ ifeq ($(OS),Windows_NT)
 	PATHSEP:=\\
 	CONFIG:=${CONFIG}_win
 else
-	RM:=rm -f 
+	RM:=rm -f
 	PATHSEP:=/
 endif
 
 all: $(EXE)
 
-$(EXE) : $(OBJ) 
+run: $(EXE)
+	fs-uae --hard_drive_0=uae/dh0 --automatic_input_grab=0
+
+$(EXE) : $(OBJ)
 	$(CC) $(CONFIG) -g -v $(OBJ) -o $(EXE)
 
 $(ODIR)/%.o : %.c

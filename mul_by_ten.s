@@ -3,7 +3,7 @@
   section    code
 
 _mul_by_ten:
-  muls.w     #10,d0 
+  muls.w     #10,d0
   rts
-  
+
   end

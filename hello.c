@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 extern int mul_by_ten(short input);
 
 int main()
