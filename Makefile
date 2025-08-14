@@ -1,11 +1,13 @@
 CC=vc
 AS=vasmm68k_mot
 VLINK=vlink
-LDFLAGS=-stdlib
-CONFIG=+kick13
-BUILD_DIR=build
 
+BUILD_DIR=build
+CONFIG=+kick13
+CC_FLAGS=-c99 -g -c -I$(NDK_INC)
+AS_FLAGS=-quiet -m68000 -Fhunk -linedebug
 EXE=uae/dh0/hello
+
 _OBJ=hello.o mul_by_ten.o
 OBJ=$(patsubst %,$(BUILD_DIR)/%,$(_OBJ))
 
@@ -18,10 +20,10 @@ clean:
 	rm -rf $(BUILD_DIR) $(EXE)
 
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
-	$(CC) $(CONFIG) -c99 -I$(NDK_INC) -g -c -k -o $@ $<
+	$(CC) $(CONFIG) $(CC_FLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
-	$(AS) -quiet -m68000 -Fhunk -linedebug -o $@ $<
+	$(AS) $(AS_FLAGS) -o $@ $<
 
 $(EXE): $(OBJ)
 	$(CC) $(CONFIG) -g -o $@ $^
