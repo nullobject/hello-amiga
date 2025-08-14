@@ -1,10 +1,9 @@
-BUILD_DIR=build
-
 CC=vc
 AS=vasmm68k_mot
 VLINK=vlink
 LDFLAGS=-stdlib
 CONFIG=+kick13
+BUILD_DIR=build
 
 EXE=uae/dh0/hello
 _OBJ=hello.o mul_by_ten.o
@@ -19,7 +18,7 @@ clean:
 	rm -rf $(BUILD_DIR) $(EXE)
 
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
-	$(CC) $(CONFIG) -I$(NDK_INC) -g -c -k -o $@ $<
+	$(CC) $(CONFIG) -c99 -I$(NDK_INC) -g -c -k -o $@ $<
 
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(AS) -quiet -m68000 -Fhunk -linedebug -o $@ $<
@@ -29,3 +28,5 @@ $(EXE): $(OBJ)
 
 $(BUILD_DIR):
 	mkdir $@
+
+.PHONY: all clean run
