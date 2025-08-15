@@ -25,7 +25,7 @@ $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(CC) $(CONFIG) -g -c -o $@ $<
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(CONFIG) -g -o $@ $^
+	$(CC) $(CONFIG) -lamiga -lauto -g -o $@ $^
 
 $(BUILD_DIR):
 	mkdir $@
