@@ -83,25 +83,24 @@ UWORD __chip coplist[] = {
 
     COP_WAIT_END, COP_WAIT_END};
 
-static volatile ULONG *custom_vposr = (volatile ULONG *)0xdff004;
+volatile ULONG *custom_vposr = (volatile ULONG *)0xdff004;
 
-// Wait for this position for vertical blank
-// translated from http://eab.abime.net/showthread.php?t=51928
-static vb_waitpos;
+// Wait for this position for vertical blank translated from http://eab.abime.net/showthread.php?t=51928
+int vb_waitpos;
 
-static void wait_vblank() {
+void wait_vblank() {
   while (((*custom_vposr) & 0x1ff00) != (vb_waitpos << 8))
     ;
 }
 
-static BOOL init_display(void) {
+BOOL init_display(void) {
   LoadView(NULL); // clear display, reset hardware registers
   WaitTOF();      // 2 WaitTOFs to wait for 1. long frame and
   WaitTOF();      // 2. short frame copper lists to finish (if interlaced)
   return (((struct GfxBase *)GfxBase)->DisplayFlags & PAL) == PAL;
 }
 
-static void reset_display(void) {
+void reset_display(void) {
   LoadView(((struct GfxBase *)GfxBase)->ActiView);
   WaitTOF();
   WaitTOF();
@@ -109,26 +108,22 @@ static void reset_display(void) {
   RethinkDisplay();
 }
 
-static UBYTE __chip *display_buffer;
-
-// static struct Ratr0TileSheet background;
-static struct Ratr0TileSheet tileset;
-static struct Ratr0Level level;
+struct Ratr0TileSheet tileset;
+struct Ratr0Level level;
 
 // To handle input
-static struct MsgPort *input_mp;
-static struct IOStdReq *input_io;
-static struct Interrupt handler_info;
-static int should_exit;
+struct MsgPort *input_mp;
+struct IOStdReq *input_io;
+struct Interrupt handler_info;
+int should_exit;
 
 #define ESCAPE (0x45)
 
-static struct InputEvent *my_input_handler(__reg("a0") struct InputEvent *event, __reg("a1") APTR handler_data) {
+struct InputEvent *my_input_handler(__reg("a0") struct InputEvent *event, __reg("a1") APTR handler_data) {
   struct InputEvent *result = event, *prev = NULL;
 
   Forbid();
-  // Intercept all raw key events before they reach Intuition, ignore
-  // everything else
+  // Intercept all raw key events before they reach Intuition, ignore everything else
   if (result->ie_Class == IECLASS_RAWKEY) {
     if (result->ie_Code == ESCAPE) {
       should_exit = 1;
@@ -139,30 +134,30 @@ static struct InputEvent *my_input_handler(__reg("a0") struct InputEvent *event,
   return result;
 }
 
-static void cleanup_input_handler(void) {
+void cleanup_input_handler(void) {
   if (input_io) {
     // remove our input handler from the chain
     input_io->io_Command = IND_REMHANDLER;
     input_io->io_Data = (APTR)&handler_info;
     DoIO((struct IORequest *)input_io);
 
-    if (!(CheckIO((struct IORequest *)input_io)))
+    if (!(CheckIO((struct IORequest *)input_io))) {
       AbortIO((struct IORequest *)input_io);
+    }
+
     WaitIO((struct IORequest *)input_io);
     CloseDevice((struct IORequest *)input_io);
     DeleteExtIO((struct IORequest *)input_io);
   }
-  if (input_mp)
+  if (input_mp) {
     DeletePort(input_mp);
+  }
 }
 
-static BYTE error;
-
-static int setup_input_handler(void) {
+int setup_input_handler(void) {
   input_mp = CreatePort(0, 0);
   input_io = (struct IOStdReq *)CreateExtIO(input_mp, sizeof(struct IOStdReq));
-  error = OpenDevice("input.device", 0L, (struct IORequest *)input_io, 0);
-
+  OpenDevice("input.device", 0L, (struct IORequest *)input_io, 0);
   handler_info.is_Code = (void (*)(void))my_input_handler;
   handler_info.is_Data = NULL;
   handler_info.is_Node.ln_Pri = 100;
@@ -173,7 +168,7 @@ static int setup_input_handler(void) {
   return 1;
 }
 
-static void cleanup(void) {
+void cleanup(void) {
   cleanup_input_handler();
   ratr0_free_level_data(&level);
   ratr0_free_tilesheet_data(&tileset);
@@ -204,18 +199,20 @@ int main(int argc, char **argv) {
     puts("Could not initialize input handler");
     return 1;
   }
+
   SetTaskPri(FindTask(NULL), TASK_PRIORITY);
   BOOL is_pal = init_display();
 
   // same vertical size for PAL and NTSC
   int display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
-  display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
+  UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
   if (!ratr0_read_tilesheet("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;
   }
+
   if (!ratr0_read_level("graphics/rocknroll_horizontal.lvl", &level)) {
     puts("Could not read level");
     cleanup();
@@ -340,8 +337,10 @@ int main(int argc, char **argv) {
       }
     }
   }
+
   DisownBlitter();
   FreeMem(display_buffer, display_buffer_size);
   cleanup();
+
   return 0;
 }
