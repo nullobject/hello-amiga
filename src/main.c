@@ -20,25 +20,25 @@
 extern struct GfxBase *GfxBase;
 extern struct Custom custom;
 
-static UWORD __chip coplist_pal[] = {COP_MOVE(BPLCON0, BPLCON0_COMPOSITE_COLOR),
-                                     COP_MOVE(COLOR00, 0xf00),
-                                     0x7c01,
-                                     0xff00, // wait for 1/3 (0x07, 0x7c)
-                                     COP_MOVE(COLOR00, 0x0f0),
-                                     0xda01,
-                                     0xff00, // wait for 2/3 (0x07, 0xda)
-                                     COP_MOVE(COLOR00, 0x00f),
-                                     COP_WAIT_END};
+UWORD __chip coplist_pal[] = {COP_MOVE(BPLCON0, BPLCON0_COMPOSITE_COLOR),
+                              COP_MOVE(COLOR00, 0xf00),
+                              0x7c01,
+                              0xff00, // wait for 1/3 (0x07, 0x7c)
+                              COP_MOVE(COLOR00, 0x0f0),
+                              0xda01,
+                              0xff00, // wait for 2/3 (0x07, 0xda)
+                              COP_MOVE(COLOR00, 0x00f),
+                              COP_WAIT_END};
 
-static UWORD __chip coplist_ntsc[] = {COP_MOVE(BPLCON0, BPLCON0_COMPOSITE_COLOR),
-                                      COP_MOVE(COLOR00, 0xf00),
-                                      0x6607,
-                                      0xfffe,
-                                      COP_MOVE(COLOR00, 0x0f0),
-                                      0xb607,
-                                      0xfffe,
-                                      COP_MOVE(COLOR00, 0x00f),
-                                      COP_WAIT_END};
+UWORD __chip coplist_ntsc[] = {COP_MOVE(BPLCON0, BPLCON0_COMPOSITE_COLOR),
+                               COP_MOVE(COLOR00, 0xf00),
+                               0x6607,
+                               0xfffe,
+                               COP_MOVE(COLOR00, 0x0f0),
+                               0xb607,
+                               0xfffe,
+                               COP_MOVE(COLOR00, 0x00f),
+                               COP_WAIT_END};
 
 BOOL init_display(void) {
   LoadView(NULL); // clear display, reset hardware registers
