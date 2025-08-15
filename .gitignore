@@ -1,9 +1,4 @@
 build
-build-vbcc
-uae/dh0/hello
-.DS_Store
-bin
-!bin/config
-!bin/targets
-.vscode/ipch
+compile_flags.txt
 hello.asm
+uae/dh0/hello
