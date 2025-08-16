@@ -1,7 +1,7 @@
 BUILD_DIR = build
 TARGET = uae/dh0/hello
 CC = vc
-CONFIG = +kick13
+CONFIG = +aos68k
 
 C_SOURCES = $(wildcard src/*.c)
 S_SOURCES = $(wildcard src/*.s)
@@ -19,7 +19,7 @@ clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
 
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
-	$(CC) $(CONFIG) -c99 -g -c -I$(NDK_INC) -o $@ $<
+	$(CC) $(CONFIG) -c99 -g -c -I/opt/amiga-sdk/NDK_3.5/Include/include_h -o $@ $<
 
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(CC) $(CONFIG) -g -c -o $@ $<
