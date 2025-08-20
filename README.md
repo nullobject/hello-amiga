@@ -1,34 +1,17 @@
-# Example project for Amiga visual studio code vbcc project
-Example of vscode workspace for Amiga Assembly and C integration building.
+# hello-amiga
 
-# !!Work in progress !!
+This project contains Amiga code examples.
 
-## Getting started
-### Copy or clone this workspace
-- Unzip it
+## Examples
 
-### Setup VSCode
-- Launch VSCode
-- Install the *Amiga Assembly Extension* extension
-- Install Microsoft C/C++ extension (optional)
+Export `NDK_INC` environment variable:
 
-### Build the code
-- Type (⇧⌘B or Ctrl⇧B) or enter the Command Palette (⇧⌘P or F1) and select `Tasks: Run Build Task`)
+```sh
+export NDK_INC="/opt/amiga-sdk/NDK_1.3/Includes1.3/include.h"
+```
 
-### Run the application
-- Click on the debug icon (⇧⌘D or Ctrl⇧D)
-- In the upper combo select **WinUAE Launch** (Windows only) or **FS-UAE Launch**
-- Click on the ▷ (Play) button or type F5
+Run an example:
 
-### Debug the application
-- Click on the debug icon (⇧⌘D or Ctrl⇧D)
-- In the upper combo select **WinUAE Debug** (Windows only) or **FS-UAE Debug**
-- Open a C or ASM file and set a breakpoint
-- Click on the ▷ (Play) button or type F5
-
-## Adapting to your application
-### Change the name of the application
-- Change the name `hello` in the Makefile
-
-### Add/remove/rename a file to the build
-- Each modification of a source file add/rename/remove must reported in the **Makefile**
+```sh
+make example1
+```
