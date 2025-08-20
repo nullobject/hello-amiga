@@ -1,4 +1,3 @@
 build
 compile_flags.txt
-hello.asm
-uae/dh0/hello
+uae/dh0/app.exe
