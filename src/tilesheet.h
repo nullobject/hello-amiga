@@ -3,8 +3,8 @@
 
 #include <exec/types.h>
 
-// information about a tile sheet
-#define FILE_ID_LEN (8)
+#define FILE_ID_LEN 8
+#define MAX_PALETTE_SIZE 32
 
 // information about a tile sheet
 // File format version 2
@@ -23,7 +23,6 @@ struct Ratr0TileSheetHeader {
   UWORD checksum;
 };
 
-#define MAX_PALETTE_SIZE (32)
 struct Ratr0TileSheet {
   struct Ratr0TileSheetHeader header;
   UWORD palette[MAX_PALETTE_SIZE];
