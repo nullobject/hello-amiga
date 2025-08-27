@@ -16,26 +16,38 @@
 #define DIWSTRT_VALUE 0x2c81
 #define DIWSTOP_VALUE_PAL 0x2cc1
 #define DIWSTOP_VALUE_NTSC 0xf4c1
-#define DDFSTRT_VALUE 0x0038
+
+#define DDFSTRT_VALUE 0x0030
 #define DDFSTOP_VALUE 0x00d0
 
 #define BPLCON0_VALUE 0x5200
+#define BPLCON2_VALUE 0x0048
 
 // copper instruction macros
 #define COP_MOVE(addr, data) addr, data
 #define COP_WAIT_END 0xffff, 0xfffe
 
-#define COPLIST_IDX_DIWSTOP_VALUE 9
-#define COPLIST_IDX_BPL1MOD_VALUE 13
-#define COPLIST_IDX_BPL2MOD_VALUE 15
-#define COPLIST_IDX_COLOR00_VALUE 17
+#define COPLIST_IDX_DIWSTOP_VALUE (9)
+#define COPLIST_IDX_BPLCON1_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 4)
+#define COPLIST_IDX_BPL1MOD_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 8)
+#define COPLIST_IDX_BPL2MOD_VALUE (COPLIST_IDX_BPL1MOD_VALUE + 2)
+#define COPLIST_IDX_COLOR00_VALUE (COPLIST_IDX_BPL2MOD_VALUE + 2)
 #define COPLIST_IDX_BPL1PTH_VALUE (COPLIST_IDX_COLOR00_VALUE + 64)
-#define COPLIST_IDX_BPL1PTH_SECOND_VALUE (COPLIST_IDX_BPL1PTH_VALUE + 20 + 4)
+
+#define SCREEN_WIDTH 352
+#define SCREEN_HEIGHT 256
+#define BYTES_PER_ROW (SCREEN_WIDTH / 8)
+#define BPL_MODULO ((SCREEN_WIDTH - 320) / 8 + SCREEN_WIDTH / 8 * 4 - 2)
+#define VTILES (256 / 16)
+#define HTILES (352 / 16)
+#define DMOD (BYTES_PER_ROW - 2)
+#define NUM_BITPLANES 5
+#define PLANE_SIZE (BYTES_PER_ROW * SCREEN_HEIGHT)
 
 extern struct GfxBase *GfxBase;
 extern struct Custom custom;
 
-struct Ratr0TileSheet image;
+struct Ratr0TileSheet tileset;
 
 UWORD __chip coplist[] = {
     // set fetch mode = 0
@@ -43,7 +55,8 @@ UWORD __chip coplist[] = {
 
     // set display registers
     COP_MOVE(DDFSTRT, DDFSTRT_VALUE), COP_MOVE(DDFSTOP, DDFSTOP_VALUE), COP_MOVE(DIWSTRT, DIWSTRT_VALUE),
-    COP_MOVE(DIWSTOP, DIWSTOP_VALUE_PAL), COP_MOVE(BPLCON0, BPLCON0_VALUE), COP_MOVE(BPL1MOD, 0), COP_MOVE(BPL2MOD, 0),
+    COP_MOVE(DIWSTOP, DIWSTOP_VALUE_PAL), COP_MOVE(BPLCON0, BPLCON0_VALUE), COP_MOVE(BPLCON1, 0),
+    COP_MOVE(BPLCON2, BPLCON2_VALUE), COP_MOVE(BPL1MOD, BPL_MODULO), COP_MOVE(BPL2MOD, BPL_MODULO),
 
     // set color registers
     COP_MOVE(COLOR00, 0x000), COP_MOVE(COLOR01, 0x000), COP_MOVE(COLOR02, 0x000), COP_MOVE(COLOR03, 0x000),
@@ -76,22 +89,37 @@ void reset_display(void) {
   RethinkDisplay();
 }
 
-void waitmouse(void) {
+void wait_mouse(void) {
   volatile UBYTE *ciaa_pra = (volatile UBYTE *)0xbfe001;
   while ((*ciaa_pra & PRA_FIR0_BIT) != 0)
     ;
 }
 
 void cleanup(void) {
-  ratr0_free_tilesheet_data(&image);
+  ratr0_free_tilesheet_data(&tileset);
   reset_display();
+}
+
+void blit_column(UBYTE *dst, int tile) {
+  UBYTE *p = dst;
+  int tx, ty;
+
+  for (int ly = 0; ly < VTILES; ly++) {
+    tx = tile % tileset.header.num_tiles_h;
+    ty = tile / tileset.header.num_tiles_h;
+    ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
+    p += BYTES_PER_ROW * tileset.header.tile_height * tileset.header.bmdepth;
+  }
 }
 
 int main(int argc, char **argv) {
   SetTaskPri(FindTask(NULL), TASK_PRIORITY);
   BOOL is_pal = init_display();
 
-  if (!ratr0_read_tilesheet("graphics/rocknroll_tiles.ts", &image)) {
+  int display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
+  UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
+
+  if (!ratr0_read_tilesheet("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;
@@ -103,23 +131,33 @@ int main(int argc, char **argv) {
     coplist[COPLIST_IDX_DIWSTOP_VALUE] = DIWSTOP_VALUE_NTSC;
   }
 
-  int img_row_bytes = image.header.width / 8;
-  UBYTE num_colors = 1 << image.header.bmdepth;
+  UBYTE num_colors = 1 << tileset.header.bmdepth;
   for (int i = 0; i < num_colors; i++) {
-    coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = image.palette[i];
+    coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = tileset.palette[i];
   }
 
   int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
-  for (int i = 0; i < image.header.bmdepth; i++) {
-    ULONG addr = (ULONG) & (image.imgdata[i * img_row_bytes]);
+  ULONG addr = (ULONG)display_buffer;
+  for (int i = 0; i < tileset.header.bmdepth; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 4; // next bitplane
+    addr += BYTES_PER_ROW;
+  }
+  OwnBlitter();
+
+  for (int lx = 0; lx < HTILES; lx++) {
+    blit_column(display_buffer + lx * 2, lx);
   }
 
+  custom.dmacon = 0x0020;
   custom.cop1lc = (ULONG)coplist;
 
-  waitmouse();
+  // Wait for mouse button
+  wait_mouse();
+
+  DisownBlitter();
+  FreeMem(display_buffer, display_buffer_size);
   cleanup();
 
   return 0;
