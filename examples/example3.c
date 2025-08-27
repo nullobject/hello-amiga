@@ -4,6 +4,7 @@
 #include <exec/types.h>
 #include <graphics/gfxbase.h>
 #include <hardware/custom.h>
+#include <hardware/dmabits.h>
 #include <stdio.h>
 
 #include "../src/ahpc_registers.h"
@@ -17,10 +18,11 @@
 #define DIWSTOP_VALUE_PAL 0x2cc1
 #define DIWSTOP_VALUE_NTSC 0xf4c1
 
-#define DDFSTRT_VALUE 0x0030
+#define DDFSTRT_VALUE 0x0038
 #define DDFSTOP_VALUE 0x00d0
 
 #define BPLCON0_VALUE 0x5200
+#define BPLCON1_VALUE 0x0000
 #define BPLCON2_VALUE 0x0048
 
 // copper instruction macros
@@ -29,20 +31,21 @@
 
 #define COPLIST_IDX_DIWSTOP_VALUE (9)
 #define COPLIST_IDX_BPLCON1_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 4)
-#define COPLIST_IDX_BPL1MOD_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 8)
+#define COPLIST_IDX_BPLCON2_VALUE (COPLIST_IDX_BPLCON1_VALUE + 2)
+#define COPLIST_IDX_BPL1MOD_VALUE (COPLIST_IDX_BPLCON2_VALUE + 2)
 #define COPLIST_IDX_BPL2MOD_VALUE (COPLIST_IDX_BPL1MOD_VALUE + 2)
 #define COPLIST_IDX_COLOR00_VALUE (COPLIST_IDX_BPL2MOD_VALUE + 2)
 #define COPLIST_IDX_BPL1PTH_VALUE (COPLIST_IDX_COLOR00_VALUE + 64)
 
-#define SCREEN_WIDTH 352
-#define SCREEN_HEIGHT 256
-#define BYTES_PER_ROW (SCREEN_WIDTH / 8)
-#define BPL_MODULO ((SCREEN_WIDTH - 320) / 8 + SCREEN_WIDTH / 8 * 4 - 2)
-#define VTILES (256 / 16)
-#define HTILES (352 / 16)
-#define DMOD (BYTES_PER_ROW - 2)
 #define NUM_BITPLANES 5
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 256
+#define HTILES (320 / 16)
+#define VTILES (256 / 16)
+#define BYTES_PER_ROW (SCREEN_WIDTH / 8)
+#define BPL_MODULO (BYTES_PER_ROW * (NUM_BITPLANES - 1))
 #define PLANE_SIZE (BYTES_PER_ROW * SCREEN_HEIGHT)
+#define DMOD (BYTES_PER_ROW - 2)
 
 extern struct GfxBase *GfxBase;
 extern struct Custom custom;
@@ -55,7 +58,7 @@ UWORD __chip coplist[] = {
 
     // set display registers
     COP_MOVE(DDFSTRT, DDFSTRT_VALUE), COP_MOVE(DDFSTOP, DDFSTOP_VALUE), COP_MOVE(DIWSTRT, DIWSTRT_VALUE),
-    COP_MOVE(DIWSTOP, DIWSTOP_VALUE_PAL), COP_MOVE(BPLCON0, BPLCON0_VALUE), COP_MOVE(BPLCON1, 0),
+    COP_MOVE(DIWSTOP, DIWSTOP_VALUE_PAL), COP_MOVE(BPLCON0, BPLCON0_VALUE), COP_MOVE(BPLCON1, BPLCON1_VALUE),
     COP_MOVE(BPLCON2, BPLCON2_VALUE), COP_MOVE(BPL1MOD, BPL_MODULO), COP_MOVE(BPL2MOD, BPL_MODULO),
 
     // set color registers
@@ -138,7 +141,7 @@ int main(int argc, char **argv) {
 
   int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
   ULONG addr = (ULONG)display_buffer;
-  for (int i = 0; i < tileset.header.bmdepth; i++) {
+  for (int i = 0; i < NUM_BITPLANES; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 4; // next bitplane
@@ -150,7 +153,10 @@ int main(int argc, char **argv) {
     blit_column(display_buffer + lx * 2, lx);
   }
 
-  custom.dmacon = 0x0020;
+  // Disable sprite DMA
+  custom.dmacon = DMAF_SPRITE;
+
+  // Apply copper list
   custom.cop1lc = (ULONG)coplist;
 
   // Wait for mouse button
