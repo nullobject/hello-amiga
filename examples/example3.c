@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "../src/ahpc_registers.h"
-#include "../src/tilesheet.h"
+#include "../src/tileset.h"
 
 // 20 instead of 127 because of input.device priority
 #define TASK_PRIORITY 20
@@ -50,7 +50,7 @@
 extern struct GfxBase *GfxBase;
 extern struct Custom custom;
 
-struct Ratr0TileSheet tileset;
+struct Ratr0Tileset tileset;
 
 UWORD __chip coplist[] = {
     // set fetch mode = 0
@@ -71,7 +71,7 @@ UWORD __chip coplist[] = {
     COP_MOVE(COLOR24, 0x000), COP_MOVE(COLOR25, 0x000), COP_MOVE(COLOR26, 0x000), COP_MOVE(COLOR27, 0x000),
     COP_MOVE(COLOR28, 0x000), COP_MOVE(COLOR29, 0x000), COP_MOVE(COLOR30, 0x000), COP_MOVE(COLOR31, 0x000),
 
-    // set bit planes registers
+    // set bitplane registers
     COP_MOVE(BPL1PTH, 0), COP_MOVE(BPL1PTL, 0), COP_MOVE(BPL2PTH, 0), COP_MOVE(BPL2PTL, 0), COP_MOVE(BPL3PTH, 0),
     COP_MOVE(BPL3PTL, 0), COP_MOVE(BPL4PTH, 0), COP_MOVE(BPL4PTL, 0), COP_MOVE(BPL5PTH, 0), COP_MOVE(BPL5PTL, 0),
 
@@ -99,17 +99,16 @@ void wait_mouse(void) {
 }
 
 void cleanup(void) {
-  ratr0_free_tilesheet_data(&tileset);
+  ratr0_free_tileset_data(&tileset);
   reset_display();
 }
 
 void blit_column(UBYTE *dst, int tile) {
   UBYTE *p = dst;
-  int tx, ty;
 
   for (int ly = 0; ly < VTILES; ly++) {
-    tx = tile % tileset.header.num_tiles_h;
-    ty = tile / tileset.header.num_tiles_h;
+    int tx = tile % tileset.header.num_tiles_h;
+    int ty = tile / tileset.header.num_tiles_h;
     ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
     p += BYTES_PER_ROW * tileset.header.tile_height * tileset.header.bmdepth;
   }
@@ -122,7 +121,7 @@ int main(int argc, char **argv) {
   int display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
   UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tilesheet("graphics/rocknroll_tiles.ts", &tileset)) {
+  if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;

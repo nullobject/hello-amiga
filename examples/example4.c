@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 #include "../src/ahpc_registers.h"
-#include "../src/tilesheet.h"
+#include "../src/tileset.h"
 
 extern struct GfxBase *GfxBase;
 extern struct Custom custom;
@@ -108,7 +108,7 @@ void reset_display(void) {
   RethinkDisplay();
 }
 
-struct Ratr0TileSheet tileset;
+struct Ratr0Tileset tileset;
 struct Ratr0Level level;
 
 // To handle input
@@ -171,7 +171,7 @@ int setup_input_handler(void) {
 void cleanup(void) {
   cleanup_input_handler();
   ratr0_free_level_data(&level);
-  ratr0_free_tilesheet_data(&tileset);
+  ratr0_free_tileset_data(&tileset);
   reset_display();
 }
 
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
   int display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
   UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tilesheet("graphics/rocknroll_tiles.ts", &tileset)) {
+  if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;

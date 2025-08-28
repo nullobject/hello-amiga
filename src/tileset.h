@@ -1,5 +1,5 @@
-#ifndef TILESHEET_H
-#define TILESHEET_H
+#ifndef TILESET_H
+#define TILESET_H
 
 #include <exec/types.h>
 
@@ -11,7 +11,7 @@
 // changes to version 1:
 //   1. dropped the reserved2 word after palette_size
 //   2. changed size of checksum from ULONG to UWORD
-struct Ratr0TileSheetHeader {
+struct Ratr0TilesetHeader {
   UBYTE id[FILE_ID_LEN];
   UBYTE version, flags;
   UBYTE reserved1, bmdepth;
@@ -23,15 +23,15 @@ struct Ratr0TileSheetHeader {
   UWORD checksum;
 };
 
-struct Ratr0TileSheet {
-  struct Ratr0TileSheetHeader header;
+struct Ratr0Tileset {
+  struct Ratr0TilesetHeader header;
   UWORD palette[MAX_PALETTE_SIZE];
   UBYTE *imgdata;
 };
 
-extern ULONG ratr0_read_tilesheet(const char *filename, struct Ratr0TileSheet *sheet);
-extern void ratr0_free_tilesheet_data(struct Ratr0TileSheet *sheet);
-extern void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0TileSheet *tileset, int tx, int ty);
+extern ULONG ratr0_read_tileset(const char *filename, struct Ratr0Tileset *sheet);
+extern void ratr0_free_tileset_data(struct Ratr0Tileset *sheet);
+extern void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0Tileset *tileset, int tx, int ty);
 
 struct Ratr0LevelHeader {
   UBYTE id[FILE_ID_LEN];

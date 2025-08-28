@@ -4,15 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "tilesheet.h"
+#include "tileset.h"
 
 /**
  * Reads the image information from specified RATR0 tile sheet file.
  *
  * @param filename path to the tile sheet file
- * @param sheet pointer to a Ratr0TileSheet structure
+ * @param sheet pointer to a Ratr0Tileset structure
  */
-ULONG ratr0_read_tilesheet(const char *filename, struct Ratr0TileSheet *sheet) {
+ULONG ratr0_read_tileset(const char *filename, struct Ratr0Tileset *sheet) {
   int elems_read;
   ULONG retval = 0;
 
@@ -20,14 +20,14 @@ ULONG ratr0_read_tilesheet(const char *filename, struct Ratr0TileSheet *sheet) {
 
   if (fp) {
     int num_img_bytes;
-    elems_read = fread(&sheet->header, sizeof(struct Ratr0TileSheetHeader), 1, fp);
+    elems_read = fread(&sheet->header, sizeof(struct Ratr0TilesetHeader), 1, fp);
     elems_read = fread(&sheet->palette, sizeof(UWORD), sheet->header.palette_size, fp);
     sheet->imgdata = AllocMem(sheet->header.imgdata_size, MEMF_CHIP | MEMF_CLEAR);
     elems_read = fread(sheet->imgdata, sizeof(unsigned char), sheet->header.imgdata_size, fp);
     fclose(fp);
     return 1;
   } else {
-    printf("ratr0_read_tilesheet() error: file '%s' not found\n", filename);
+    printf("ratr0_read_tileset() error: file '%s' not found\n", filename);
     return 0;
   }
 }
@@ -35,7 +35,7 @@ ULONG ratr0_read_tilesheet(const char *filename, struct Ratr0TileSheet *sheet) {
 /**
  * Frees the memory that was allocated for the specified RATR0 tile sheet.
  */
-void ratr0_free_tilesheet_data(struct Ratr0TileSheet *sheet) {
+void ratr0_free_tileset_data(struct Ratr0Tileset *sheet) {
   if (sheet && sheet->imgdata)
     FreeMem(sheet->imgdata, sheet->header.imgdata_size);
 }
@@ -78,7 +78,7 @@ void ratr0_free_level_data(struct Ratr0Level *level) {
  * tx, ty are tileset coordinates
  */
 extern struct Custom custom;
-void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0TileSheet *tileset, int tx, int ty) {
+void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0Tileset *tileset, int tx, int ty) {
   int height = tileset->header.tile_height * tileset->header.bmdepth;
   int num_words = 1;
 
