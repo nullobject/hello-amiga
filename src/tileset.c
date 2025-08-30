@@ -8,12 +8,12 @@
 
 extern struct Custom custom;
 
-BOOL ratr0_read_tileset(const char *filename, struct Ratr0Tileset *tileset) {
+bool ratr0_read_tileset(const char *filename, struct Ratr0Tileset *tileset) {
   FILE *fp = fopen(filename, "rb");
 
   if (fp) {
     size_t elems_read = fread(&tileset->header, sizeof(struct Ratr0TilesetHeader), 1, fp);
-    elems_read = fread(&tileset->palette, sizeof(UWORD), tileset->header.palette_size, fp);
+    elems_read = fread(&tileset->palette, sizeof(uint16_t), tileset->header.palette_size, fp);
     tileset->imgdata = AllocMem(tileset->header.imgdata_size, MEMF_CHIP | MEMF_CLEAR);
     elems_read = fread(tileset->imgdata, sizeof(unsigned char), tileset->header.imgdata_size, fp);
     fclose(fp);
@@ -29,13 +29,13 @@ void ratr0_free_tileset_data(struct Ratr0Tileset *tileset) {
     FreeMem(tileset->imgdata, tileset->header.imgdata_size);
 }
 
-void ratr0_blit_tile(UBYTE *dst, UWORD dmod, struct Ratr0Tileset *tileset, UWORD tx, UWORD ty) {
-  UWORD height = tileset->header.tile_height * tileset->header.bmdepth;
-  UWORD num_words = 1;
+void ratr0_blit_tile(uint8_t *dst, uint16_t dmod, struct Ratr0Tileset *tileset, uint16_t tx, uint16_t ty) {
+  uint16_t height = tileset->header.tile_height * tileset->header.bmdepth;
+  uint16_t num_words = 1;
 
   // map tilenum to offset
-  UWORD tile_row_bytes = tileset->header.num_tiles_h * 2 * tileset->header.tile_width * tileset->header.bmdepth;
-  UWORD src_offset = ty * tile_row_bytes + tx * 2;
+  uint16_t tile_row_bytes = tileset->header.num_tiles_h * 2 * tileset->header.tile_width * tileset->header.bmdepth;
+  uint16_t src_offset = ty * tile_row_bytes + tx * 2;
 
   WaitBlit();
   custom.bltcon0 = 0x9f0; // enable channels A and D, LF => D = A
@@ -52,15 +52,15 @@ void ratr0_blit_tile(UBYTE *dst, UWORD dmod, struct Ratr0Tileset *tileset, UWORD
   custom.bltbdat = 0xffff;
   custom.bltcdat = 0xffff;
 
-  custom.bltsize = (UWORD)(height << 6) | (num_words & 0x3f);
+  custom.bltsize = (uint16_t)(height << 6) | (num_words & 0x3f);
 }
 
-BOOL ratr0_read_level(const char *filename, struct Ratr0Level *level) {
+bool ratr0_read_level(const char *filename, struct Ratr0Level *level) {
   FILE *fp = fopen(filename, "rb");
 
   if (fp) {
     size_t elems_read = fread(&level->header, sizeof(struct Ratr0LevelHeader), 1, fp);
-    size_t data_size = sizeof(UBYTE) * level->header.width * level->header.height;
+    size_t data_size = sizeof(uint8_t) * level->header.width * level->header.height;
     level->lvldata = malloc(data_size);
     elems_read = fread(level->lvldata, sizeof(unsigned char), data_size, fp);
     fclose(fp);

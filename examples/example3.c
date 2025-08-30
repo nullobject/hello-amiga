@@ -42,7 +42,7 @@ extern struct Custom custom;
 
 struct Ratr0Tileset tileset;
 
-UWORD __chip coplist[] = {
+uint16_t __chip coplist[] = {
     // set fetch mode = 0
     COP_MOVE(FMODE, 0),
 
@@ -72,12 +72,12 @@ void cleanup(void) {
   reset_display();
 }
 
-void blit_column(UBYTE *dst, UWORD tile) {
-  UBYTE *p = dst;
+void blit_column(uint8_t *dst, uint16_t tile) {
+  uint8_t *p = dst;
 
   for (int ly = 0; ly < VTILES; ly++) {
-    UWORD tx = tile % tileset.header.num_tiles_h;
-    UWORD ty = tile / tileset.header.num_tiles_h;
+    uint16_t tx = tile % tileset.header.num_tiles_h;
+    uint16_t ty = tile / tileset.header.num_tiles_h;
     ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
     p += BYTES_PER_ROW * tileset.header.tile_height * tileset.header.bmdepth;
   }
@@ -85,10 +85,10 @@ void blit_column(UBYTE *dst, UWORD tile) {
 
 int main(int argc, char **argv) {
   SetTaskPri(FindTask(NULL), TASK_PRIORITY);
-  BOOL is_pal = init_display();
+  bool is_pal = init_display();
 
-  int display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
-  UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
+  size_t display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
+  uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
   if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
@@ -102,13 +102,13 @@ int main(int argc, char **argv) {
     coplist[COPLIST_IDX_DIWSTOP_VALUE] = DIWSTOP_VALUE_NTSC;
   }
 
-  UBYTE num_colors = 1 << tileset.header.bmdepth;
+  uint8_t num_colors = 1 << tileset.header.bmdepth;
   for (int i = 0; i < num_colors; i++) {
     coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = tileset.palette[i];
   }
 
   int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
-  ULONG addr = (ULONG)display_buffer;
+  uint32_t addr = (uint32_t)display_buffer;
   for (int i = 0; i < NUM_BITPLANES; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
   }
   OwnBlitter();
 
-  for (UWORD lx = 0; lx < HTILES; lx++) {
+  for (uint16_t lx = 0; lx < HTILES; lx++) {
     blit_column(display_buffer + lx * 2, lx);
   }
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
   custom.dmacon = DMAF_SPRITE;
 
   // Apply copper list
-  custom.cop1lc = (ULONG)coplist;
+  custom.cop1lc = (uint32_t)coplist;
 
   // Wait for mouse button
   wait_mouse();

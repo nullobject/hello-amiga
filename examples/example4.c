@@ -52,7 +52,7 @@
 
 extern struct Custom custom;
 
-UWORD __chip coplist[] = {
+uint16_t __chip coplist[] = {
     COP_MOVE(FMODE, 0), // set fetch mode = 0
 
     COP_MOVE(DDFSTRT, DDFSTRT_VALUE), COP_MOVE(DDFSTOP, DDFSTOP_VALUE), COP_MOVE(DIWSTRT, DIWSTRT_VALUE),
@@ -144,8 +144,8 @@ void cleanup(void) {
   reset_display();
 }
 
-void blit_column(UBYTE *dst, int column) {
-  UBYTE *curr_dst = dst;
+void blit_column(uint8_t *dst, int column) {
+  uint8_t *curr_dst = dst;
   int tilenum, tx, ty;
   int lx = column;
 
@@ -170,11 +170,11 @@ int main(int argc, char **argv) {
   }
 
   SetTaskPri(FindTask(NULL), TASK_PRIORITY);
-  BOOL is_pal = init_display();
+  bool is_pal = init_display();
 
   // same vertical size for PAL and NTSC
   int display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
-  UBYTE __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
+  uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
   if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
     puts("Could not read tile set");
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
     vb_waitpos = 262;
   }
 
-  UBYTE num_colors = 1 << tileset.header.bmdepth;
+  uint8_t num_colors = 1 << tileset.header.bmdepth;
 
   // 1. copy the background palette to the copper list
   for (int i = 0; i < num_colors; i++) {
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
   // to the bitplanes. The data is non-interleaved.
   int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
 
-  ULONG addr = (ULONG)display_buffer;
+  uint32_t addr = (uint32_t)display_buffer;
   for (int i = 0; i < 5; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
   // no sprite DMA
   custom.dmacon = 0x0020;
   // initialize and activate the copper list
-  custom.cop1lc = (ULONG)coplist;
+  custom.cop1lc = (uint32_t)coplist;
 
   // the event loop
   int xpos = MIN_X_POS;     // logical x position (relative to the level)
@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
   int x_inc = SPEED;
 
   int num_pixels_shift, num_words_skip, blit_left, blit_right;
-  UWORD delay_mask = 0;
+  uint16_t delay_mask = 0;
 
   while (!should_exit) {
     wait_vblank(vb_waitpos);
@@ -259,7 +259,7 @@ int main(int argc, char **argv) {
 
     // update bitmap pointer
     coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
-    addr = (ULONG)display_buffer + num_words_skip * 2;
+    addr = (uint32_t)display_buffer + num_words_skip * 2;
     for (int i = 0; i < NUM_BITPLANES; i++) {
       coplist[coplist_idx] = (addr >> 16) & 0xffff;
       coplist[coplist_idx + 2] = addr & 0xffff;
