@@ -19,9 +19,9 @@ bool init_display();
 void reset_display();
 
 /**
- * Waits for a vertical blank.
+ * Waits for a raster line.
  */
-void wait_vblank(uint16_t pos);
+void wait_line(uint16_t pos);
 
 /**
  * Waits for a mouse button

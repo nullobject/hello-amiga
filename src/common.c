@@ -28,7 +28,7 @@ void reset_display(void) {
   RethinkDisplay();
 }
 
-void wait_vblank(uint16_t pos) {
+void wait_line(uint16_t pos) {
   while (((*custom_vposr) & 0x1ff00) != (pos << 8))
     ;
 }

@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
   uint16_t delay_mask = 0;
 
   while (!should_exit) {
-    wait_vblank(vb_waitpos);
+    wait_line(vb_waitpos);
 
     blit_left = blit_right = 0;
 
