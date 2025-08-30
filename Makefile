@@ -6,7 +6,7 @@ BUILD_DIR = build
 TARGET_DIR = uae/dh0
 
 CONFIG = +kick13
-TARGET = $(TARGET_DIR)/app.exe
+TARGET = $(TARGET_DIR)/app
 
 EXAMPLES = $(wildcard examples/*.c)
 vpath %.c $(sort $(dir $(EXAMPLES)))
