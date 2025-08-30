@@ -75,7 +75,7 @@ UWORD __chip coplist[] = {
     COP_MOVE(BPL1PTH, 0), COP_MOVE(BPL1PTL, 0), COP_MOVE(BPL2PTH, 0), COP_MOVE(BPL2PTL, 0), COP_MOVE(BPL3PTH, 0),
     COP_MOVE(BPL3PTL, 0), COP_MOVE(BPL4PTH, 0), COP_MOVE(BPL4PTL, 0), COP_MOVE(BPL5PTH, 0), COP_MOVE(BPL5PTL, 0),
 
-    COP_WAIT_END, COP_WAIT_END};
+    COP_WAIT_END};
 
 BOOL init_display(void) {
   LoadView(NULL); // clear display, reset hardware registers
