@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
   size_t display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
   uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
+  if (!ratr0_read_tileset("tileset.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;

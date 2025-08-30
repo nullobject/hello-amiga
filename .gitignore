@@ -1,3 +1,5 @@
 build
 compile_flags.txt
+uae/dh0/*.ts
+uae/dh0/*.lvl
 uae/dh0/app.exe

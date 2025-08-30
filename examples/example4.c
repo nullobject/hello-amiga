@@ -176,13 +176,13 @@ int main(int argc, char **argv) {
   int display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
   uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tileset("graphics/rocknroll_tiles.ts", &tileset)) {
+  if (!ratr0_read_tileset("tileset.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;
   }
 
-  if (!ratr0_read_level("graphics/rocknroll_horizontal.lvl", &level)) {
+  if (!ratr0_read_level("level.lvl", &level)) {
     puts("Could not read level");
     cleanup();
     return 1;

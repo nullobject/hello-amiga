@@ -1,9 +1,11 @@
 .PHONY: clean
 .SECONDARY:
 
+ASSETS_DIR = assets
 BUILD_DIR = build
 TARGET_DIR = uae/dh0
-TARGET = uae/dh0/app.exe
+
+TARGET = $(TARGET_DIR)/app.exe
 CC = vc
 CONFIG = +kick13
 
@@ -21,6 +23,7 @@ clean:
 
 example%: $(BUILD_DIR)/example%.exe
 	cp $< $(TARGET)
+	ratr0-converttiled $(ASSETS_DIR)/tileset.json $(ASSETS_DIR)/map.json $(TARGET_DIR)/tileset.ts $(TARGET_DIR)/level.lvl
 	fs-uae --hard_drive_0=uae/dh0 --automatic_input_grab=0
 
 $(BUILD_DIR)/%.exe: %.c $(OBJECTS) | $(BUILD_DIR)
