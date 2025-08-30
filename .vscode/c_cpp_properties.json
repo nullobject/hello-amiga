@@ -3,11 +3,13 @@
         {
             "name": "Linux",
             "includePath": [
+                "/opt/amiga/vbcc/targets/m68k-kick13/include",
+                "${env:NDK_INC}",
                 "${workspaceFolder}/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
-            "cStandard": "c17",
+            "cStandard": "c99",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-clang-x64"
         }
