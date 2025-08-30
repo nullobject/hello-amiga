@@ -7,6 +7,9 @@
 
 #define PRA_FIR0_BIT (1 << 6)
 
+volatile UBYTE *ciaa_pra = (volatile UBYTE *)0xbfe001;
+volatile ULONG *custom_vposr = (volatile ULONG *)0xdff004;
+
 extern struct Custom custom;
 extern struct GfxBase *GfxBase;
 
@@ -25,8 +28,12 @@ void reset_display(void) {
   RethinkDisplay();
 }
 
+void wait_vblank(int pos) {
+  while (((*custom_vposr) & 0x1ff00) != (pos << 8))
+    ;
+}
+
 void wait_mouse() {
-  volatile UBYTE *ciaa_pra = (volatile UBYTE *)0xbfe001;
   while ((*ciaa_pra & PRA_FIR0_BIT) != 0)
     ;
 }

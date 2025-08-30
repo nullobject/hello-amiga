@@ -78,15 +78,8 @@ UWORD __chip coplist[] = {
 
     COP_WAIT_END};
 
-volatile ULONG *custom_vposr = (volatile ULONG *)0xdff004;
-
 // Wait for this position for vertical blank translated from http://eab.abime.net/showthread.php?t=51928
 int vb_waitpos;
-
-void wait_vblank() {
-  while (((*custom_vposr) & 0x1ff00) != (vb_waitpos << 8))
-    ;
-}
 
 struct Ratr0Tileset tileset;
 struct Ratr0Level level;
@@ -251,7 +244,7 @@ int main(int argc, char **argv) {
   UWORD delay_mask = 0;
 
   while (!should_exit) {
-    wait_vblank();
+    wait_vblank(vb_waitpos);
 
     blit_left = blit_right = 0;
 

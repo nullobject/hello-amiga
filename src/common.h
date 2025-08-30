@@ -14,6 +14,11 @@ BOOL init_display();
 void reset_display();
 
 /**
+ * Waits for a vertical blank.
+ */
+void wait_vblank(int pos);
+
+/**
  * Waits for a mouse button
  */
 void wait_mouse();
