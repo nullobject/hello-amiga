@@ -3,6 +3,10 @@
 
 #include <exec/types.h>
 
+// copper instruction macros
+#define COP_MOVE(addr, data) addr, data
+#define COP_WAIT_END 0xffff, 0xfffe
+
 /**
  * Initialises the display.
  */

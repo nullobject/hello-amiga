@@ -29,10 +29,6 @@
 // 5-3 and we need to set the playfield 2 priority bit (bit 6)
 #define BPLCON2_VALUE (0x0048)
 
-// copper instruction macros
-#define COP_MOVE(addr, data) addr, data
-#define COP_WAIT_END 0xffff, 0xfffe
-
 // copper list indexes
 #define COPLIST_IDX_DIWSTOP_VALUE (9)
 #define COPLIST_IDX_BPLCON1_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 4)

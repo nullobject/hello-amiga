@@ -20,10 +20,6 @@
 #define BPLCON1_VALUE 0x0000
 #define BPLCON2_VALUE 0x0048
 
-// copper instruction macros
-#define COP_MOVE(addr, data) addr, data
-#define COP_WAIT_END 0xffff, 0xfffe
-
 #define COPLIST_IDX_DIWSTOP_VALUE (9)
 #define COPLIST_IDX_BPLCON1_VALUE (COPLIST_IDX_DIWSTOP_VALUE + 4)
 #define COPLIST_IDX_BPLCON2_VALUE (COPLIST_IDX_BPLCON1_VALUE + 2)
