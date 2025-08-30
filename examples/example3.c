@@ -1,6 +1,8 @@
 #include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
 #include <hardware/custom.h>
 #include <hardware/dmabits.h>
+#include <stdio.h>
 
 #include "../src/ahpc_registers.h"
 #include "../src/common.h"
