@@ -72,12 +72,12 @@ void cleanup(void) {
   reset_display();
 }
 
-void blit_column(UBYTE *dst, int tile) {
+void blit_column(UBYTE *dst, UWORD tile) {
   UBYTE *p = dst;
 
   for (int ly = 0; ly < VTILES; ly++) {
-    int tx = tile % tileset.header.num_tiles_h;
-    int ty = tile / tileset.header.num_tiles_h;
+    UWORD tx = tile % tileset.header.num_tiles_h;
+    UWORD ty = tile / tileset.header.num_tiles_h;
     ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
     p += BYTES_PER_ROW * tileset.header.tile_height * tileset.header.bmdepth;
   }
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
   }
   OwnBlitter();
 
-  for (int lx = 0; lx < HTILES; lx++) {
+  for (UWORD lx = 0; lx < HTILES; lx++) {
     blit_column(display_buffer + lx * 2, lx);
   }
 

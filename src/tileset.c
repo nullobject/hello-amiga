@@ -6,85 +6,36 @@
 
 #include "tileset.h"
 
-/**
- * Reads the image information from specified RATR0 tile sheet file.
- *
- * @param filename path to the tile sheet file
- * @param sheet pointer to a Ratr0Tileset structure
- */
-ULONG ratr0_read_tileset(const char *filename, struct Ratr0Tileset *sheet) {
-  int elems_read;
-  ULONG retval = 0;
+extern struct Custom custom;
 
+BOOL ratr0_read_tileset(const char *filename, struct Ratr0Tileset *tileset) {
   FILE *fp = fopen(filename, "rb");
 
   if (fp) {
-    int num_img_bytes;
-    elems_read = fread(&sheet->header, sizeof(struct Ratr0TilesetHeader), 1, fp);
-    elems_read = fread(&sheet->palette, sizeof(UWORD), sheet->header.palette_size, fp);
-    sheet->imgdata = AllocMem(sheet->header.imgdata_size, MEMF_CHIP | MEMF_CLEAR);
-    elems_read = fread(sheet->imgdata, sizeof(unsigned char), sheet->header.imgdata_size, fp);
-    fclose(fp);
-    return 1;
-  } else {
-    printf("ratr0_read_tileset() error: file '%s' not found\n", filename);
-    return 0;
-  }
-}
-
-/**
- * Frees the memory that was allocated for the specified RATR0 tile sheet.
- */
-void ratr0_free_tileset_data(struct Ratr0Tileset *sheet) {
-  if (sheet && sheet->imgdata)
-    FreeMem(sheet->imgdata, sheet->header.imgdata_size);
-}
-
-/**
- * Reads the data from the specified RATR0 level file.
- *
- * @param filename path to the level file
- * @param level pointer to a Ratr0Level structure
- */
-BOOL ratr0_read_level(const char *filename, struct Ratr0Level *level) {
-  int elems_read;
-  BOOL retval;
-
-  FILE *fp = fopen(filename, "rb");
-
-  if (fp) {
-    int num_img_bytes, data_size;
-    elems_read = fread(&level->header, sizeof(struct Ratr0LevelHeader), 1, fp);
-    data_size = sizeof(UBYTE) * level->header.width * level->header.height;
-    level->lvldata = malloc(data_size);
-    elems_read = fread(level->lvldata, sizeof(unsigned char), data_size, fp);
+    size_t elems_read = fread(&tileset->header, sizeof(struct Ratr0TilesetHeader), 1, fp);
+    elems_read = fread(&tileset->palette, sizeof(UWORD), tileset->header.palette_size, fp);
+    tileset->imgdata = AllocMem(tileset->header.imgdata_size, MEMF_CHIP | MEMF_CLEAR);
+    elems_read = fread(tileset->imgdata, sizeof(unsigned char), tileset->header.imgdata_size, fp);
     fclose(fp);
     return TRUE;
   } else {
-    printf("ratr0_read_level() error: file '%s' not found\n", filename);
+    printf("ratr0_read_tileset() error: file '%s' not found\n", filename);
     return FALSE;
   }
 }
 
-/**
- * Frees the memory that was allocated for the specified RATR0 tile sheet.
- */
-void ratr0_free_level_data(struct Ratr0Level *level) {
-  if (level && level->lvldata)
-    free(level->lvldata);
+void ratr0_free_tileset_data(struct Ratr0Tileset *tileset) {
+  if (tileset && tileset->imgdata)
+    FreeMem(tileset->imgdata, tileset->header.imgdata_size);
 }
 
-/**
- * tx, ty are tileset coordinates
- */
-extern struct Custom custom;
-void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0Tileset *tileset, int tx, int ty) {
-  int height = tileset->header.tile_height * tileset->header.bmdepth;
-  int num_words = 1;
+void ratr0_blit_tile(UBYTE *dst, UWORD dmod, struct Ratr0Tileset *tileset, UWORD tx, UWORD ty) {
+  UWORD height = tileset->header.tile_height * tileset->header.bmdepth;
+  UWORD num_words = 1;
 
   // map tilenum to offset
-  int tile_row_bytes = tileset->header.num_tiles_h * 2 * tileset->header.tile_width * tileset->header.bmdepth;
-  int src_offset = ty * tile_row_bytes + tx * 2;
+  UWORD tile_row_bytes = tileset->header.num_tiles_h * 2 * tileset->header.tile_width * tileset->header.bmdepth;
+  UWORD src_offset = ty * tile_row_bytes + tx * 2;
 
   WaitBlit();
   custom.bltcon0 = 0x9f0; // enable channels A and D, LF => D = A
@@ -102,4 +53,26 @@ void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0Tileset *tileset, int tx,
   custom.bltcdat = 0xffff;
 
   custom.bltsize = (UWORD)(height << 6) | (num_words & 0x3f);
+}
+
+BOOL ratr0_read_level(const char *filename, struct Ratr0Level *level) {
+  FILE *fp = fopen(filename, "rb");
+
+  if (fp) {
+    size_t elems_read = fread(&level->header, sizeof(struct Ratr0LevelHeader), 1, fp);
+    size_t data_size = sizeof(UBYTE) * level->header.width * level->header.height;
+    level->lvldata = malloc(data_size);
+    elems_read = fread(level->lvldata, sizeof(unsigned char), data_size, fp);
+    fclose(fp);
+    return TRUE;
+  } else {
+    printf("ratr0_read_level() error: file '%s' not found\n", filename);
+    return FALSE;
+  }
+}
+
+void ratr0_free_level_data(struct Ratr0Level *level) {
+  if (level && level->lvldata) {
+    free(level->lvldata);
+  }
 }

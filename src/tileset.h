@@ -29,9 +29,28 @@ struct Ratr0Tileset {
   UBYTE *imgdata;
 };
 
-extern ULONG ratr0_read_tileset(const char *filename, struct Ratr0Tileset *sheet);
-extern void ratr0_free_tileset_data(struct Ratr0Tileset *sheet);
-extern void ratr0_blit_tile(UBYTE *dst, int dmod, struct Ratr0Tileset *tileset, int tx, int ty);
+/**
+ * Reads the image information from specified RATR0 tile sheet file.
+ *
+ * @param filename Path to the tileset file.
+ * @param tileset Pointer to a Ratr0Tileset structure.
+ */
+BOOL ratr0_read_tileset(const char *filename, struct Ratr0Tileset *tileset);
+
+/**
+ * Frees the memory that was allocated for the specified RATR0 tile sheet.
+ *
+ * @param tileset pointer to a Ratr0Tileset structure
+ */
+void ratr0_free_tileset_data(struct Ratr0Tileset *tileset);
+
+/**
+ * Blits a tile to the destination buffer.
+ *
+ * @param tx The tileset column.
+ * @param ty The tileset row.
+ */
+void ratr0_blit_tile(UBYTE *dst, UWORD dmod, struct Ratr0Tileset *tileset, UWORD tx, UWORD ty);
 
 struct Ratr0LevelHeader {
   UBYTE id[FILE_ID_LEN];
@@ -45,7 +64,17 @@ struct Ratr0Level {
   UBYTE *lvldata;
 };
 
-extern BOOL ratr0_read_level(const char *filename, struct Ratr0Level *level);
-extern void ratr0_free_level_data(struct Ratr0Level *level);
+/**
+ * Reads the data from the specified RATR0 level file.
+ *
+ * @param filename Path to the level file.
+ * @param level Pointer to a Ratr0Level structure.
+ */
+BOOL ratr0_read_level(const char *filename, struct Ratr0Level *level);
+
+/**
+ * Frees the memory that was allocated for the specified RATR0 tile sheet.
+ */
+void ratr0_free_level_data(struct Ratr0Level *level);
 
 #endif
