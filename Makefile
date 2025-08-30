@@ -1,4 +1,4 @@
-.PHONY: scroll run clean
+.PHONY: clean
 .SECONDARY:
 
 BUILD_DIR = build
