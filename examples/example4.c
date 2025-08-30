@@ -1,22 +1,15 @@
-/**
- * example_04.c - horizontal scrolling example (advanced)
- * Horizontal scrolling with a tile map
- */
 #include <clib/alib_protos.h>
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
 #include <clib/intuition_protos.h>
 #include <devices/input.h>
-#include <exec/types.h>
 #include <graphics/gfxbase.h>
 #include <hardware/custom.h>
-#include <stdio.h>
+#include <hardware/dmabits.h>
 
 #include "../src/ahpc_registers.h"
+#include "../src/common.h"
 #include "../src/tileset.h"
-
-extern struct GfxBase *GfxBase;
-extern struct Custom custom;
 
 // 20 instead of 127 because of input.device priority
 #define TASK_PRIORITY (20)
@@ -61,6 +54,8 @@ extern struct Custom custom;
 #define DMOD (BYTES_PER_ROW - 2)
 #define PLANE_SIZE (BYTES_PER_ROW * NUM_ROWS)
 
+extern struct Custom custom;
+
 UWORD __chip coplist[] = {
     COP_MOVE(FMODE, 0), // set fetch mode = 0
 
@@ -91,21 +86,6 @@ int vb_waitpos;
 void wait_vblank() {
   while (((*custom_vposr) & 0x1ff00) != (vb_waitpos << 8))
     ;
-}
-
-BOOL init_display(void) {
-  LoadView(NULL); // clear display, reset hardware registers
-  WaitTOF();      // 2 WaitTOFs to wait for 1. long frame and
-  WaitTOF();      // 2. short frame copper lists to finish (if interlaced)
-  return (((struct GfxBase *)GfxBase)->DisplayFlags & PAL) == PAL;
-}
-
-void reset_display(void) {
-  LoadView(((struct GfxBase *)GfxBase)->ActiView);
-  WaitTOF();
-  WaitTOF();
-  custom.cop1lc = (ULONG)((struct GfxBase *)GfxBase)->copinit;
-  RethinkDisplay();
 }
 
 struct Ratr0Tileset tileset;
