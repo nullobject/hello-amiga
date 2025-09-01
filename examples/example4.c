@@ -6,6 +6,7 @@
 #include <graphics/gfxbase.h>
 #include <hardware/custom.h>
 #include <hardware/dmabits.h>
+#include <stdio.h>
 
 #include "ahpc_registers.h"
 #include "common.h"
