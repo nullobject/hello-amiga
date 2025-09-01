@@ -6,6 +6,7 @@
 #include <graphics/gfxbase.h>
 #include <hardware/custom.h>
 #include <hardware/dmabits.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "ahpc_registers.h"
@@ -76,7 +77,7 @@ uint16_t __chip coplist[] = {
     COP_WAIT_END};
 
 // Wait for this position for vertical blank translated from http://eab.abime.net/showthread.php?t=51928
-int vb_waitpos;
+uint16_t vb_waitpos;
 
 struct Ratr0Tileset tileset;
 struct Ratr0Level level;
@@ -85,7 +86,7 @@ struct Ratr0Level level;
 struct MsgPort *input_mp;
 struct IOStdReq *input_io;
 struct Interrupt handler_info;
-int should_exit;
+bool should_exit;
 
 #define ESCAPE (0x45)
 
@@ -96,7 +97,7 @@ struct InputEvent *my_input_handler(__reg("a0") struct InputEvent *event, __reg(
   // Intercept all raw key events before they reach Intuition, ignore everything else
   if (result->ie_Class == IECLASS_RAWKEY) {
     if (result->ie_Code == ESCAPE) {
-      should_exit = 1;
+      should_exit = true;
     }
     return NULL;
   }
@@ -124,7 +125,7 @@ void cleanup_input_handler(void) {
   }
 }
 
-int setup_input_handler(void) {
+bool setup_input_handler(void) {
   input_mp = CreatePort(0, 0);
   input_io = (struct IOStdReq *)CreateExtIO(input_mp, sizeof(struct IOStdReq));
   OpenDevice("input.device", 0L, (struct IORequest *)input_io, 0);
@@ -135,7 +136,7 @@ int setup_input_handler(void) {
   input_io->io_Command = IND_ADDHANDLER;
   input_io->io_Data = (APTR)&handler_info;
   DoIO((struct IORequest *)input_io);
-  return 1;
+  return true;
 }
 
 void cleanup(void) {
@@ -147,10 +148,10 @@ void cleanup(void) {
 
 void blit_column(uint8_t *dst, int column) {
   uint8_t *curr_dst = dst;
-  int tilenum, tx, ty;
-  int lx = column;
+  uint16_t tilenum, tx, ty;
+  uint16_t lx = column;
 
-  for (int ly = 0; ly < VTILES; ly++) {
+  for (uint16_t ly = 0; ly < VTILES; ly++) {
     tilenum = level.lvldata[ly * level.header.width + lx] - 1;
     tx = tilenum % tileset.header.num_tiles_h;
     ty = tilenum / tileset.header.num_tiles_h;
@@ -174,16 +175,16 @@ int main(int argc, char **argv) {
   bool is_pal = init_display();
 
   // same vertical size for PAL and NTSC
-  int display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
+  size_t display_buffer_size = BYTES_PER_ROW * NUM_ROWS * NUM_BITPLANES;
   uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tileset("tileset.ts", &tileset)) {
+  if (!ratr0_read_tileset("16c-tileset.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;
   }
 
-  if (!ratr0_read_level("level.lvl", &level)) {
+  if (!ratr0_read_level("16c-level.lvl", &level)) {
     puts("Could not read level");
     cleanup();
     return 1;
@@ -200,16 +201,16 @@ int main(int argc, char **argv) {
   uint8_t num_colors = 1 << tileset.header.bmdepth;
 
   // 1. copy the background palette to the copper list
-  for (int i = 0; i < num_colors; i++) {
+  for (short i = 0; i < num_colors; i++) {
     coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = tileset.palette[i];
   }
 
   // 2. prepare background bitplanes and point the copper list entries
   // to the bitplanes. The data is non-interleaved.
-  int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
+  short coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
 
   uint32_t addr = (uint32_t)display_buffer;
-  for (int i = 0; i < 5; i++) {
+  for (short i = 0; i < 5; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 4; // next bitplane
@@ -218,12 +219,12 @@ int main(int argc, char **argv) {
   OwnBlitter();
 
   // Blit left half
-  for (int lx = 0; lx < HTILES_PER_HALF; lx++) {
+  for (short lx = 0; lx < HTILES_PER_HALF; lx++) {
     blit_column(display_buffer + lx * 2, lx);
   }
 
   /* Blit right half so we add half the screen width to the destination */
-  for (int lx = 0; lx < HTILES_PER_HALF; lx++) {
+  for (short lx = 0; lx < HTILES_PER_HALF; lx++) {
     blit_column(display_buffer + (HTILES_PER_HALF + lx) * 2, lx);
   }
 
@@ -233,11 +234,11 @@ int main(int argc, char **argv) {
   custom.cop1lc = (uint32_t)coplist;
 
   // the event loop
-  int xpos = MIN_X_POS;     // logical x position (relative to the level)
-  int x_offset = MIN_X_POS; // physical x position (relative to the display buffer)
-  int x_inc = SPEED;
+  short xpos = MIN_X_POS;     // logical x position (relative to the level)
+  short x_offset = MIN_X_POS; // physical x position (relative to the display buffer)
+  short x_inc = SPEED;
 
-  int num_pixels_shift, num_words_skip, blit_left, blit_right;
+  short num_pixels_shift, num_words_skip, blit_left, blit_right;
   uint16_t delay_mask = 0;
 
   while (!should_exit) {
@@ -261,7 +262,7 @@ int main(int argc, char **argv) {
     // update bitmap pointer
     coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
     addr = (uint32_t)display_buffer + num_words_skip * 2;
-    for (int i = 0; i < NUM_BITPLANES; i++) {
+    for (short i = 0; i < NUM_BITPLANES; i++) {
       coplist[coplist_idx] = (addr >> 16) & 0xffff;
       coplist[coplist_idx + 2] = addr & 0xffff;
       coplist_idx += 4;
@@ -282,17 +283,17 @@ int main(int argc, char **argv) {
 
     if (blit_left || blit_right) {
       // blit incoming column
-      int curr_level_col = xpos / 16;
-      int curr_screen_col = x_offset / 16;
-      int left_col_offset = -1;
-      int right_col_offset = HTILES_PER_HALF - 1;
-      int level_col = x_inc > 0 ? curr_level_col + right_col_offset // scroll left -> add from the right
+      short curr_level_col = xpos / 16;
+      short curr_screen_col = x_offset / 16;
+      short left_col_offset = -1;
+      short right_col_offset = HTILES_PER_HALF - 1;
+      short level_col = x_inc > 0 ? curr_level_col + right_col_offset // scroll left -> add from the right
                                 : curr_level_col + left_col_offset; // scroll right -> add from the left
 
       if (blit_left) {
         // if the display window is all the way to the right, we blit the right column at
         // the left of the display buffer
-        int left_col = curr_screen_col + left_col_offset;
+        short left_col = curr_screen_col + left_col_offset;
         if (left_col < 0)
           left_col = HTILES_TOTAL + left_col;
         blit_column(display_buffer + left_col * 2, level_col);
@@ -300,7 +301,7 @@ int main(int argc, char **argv) {
       if (blit_right) {
         // if the display window is all the way to the left, we blit the left column at the
         // right side of the display buffer
-        int right_col = curr_screen_col + right_col_offset;
+        short right_col = curr_screen_col + right_col_offset;
         if (right_col >= HTILES_TOTAL)
           right_col = right_col - HTILES_TOTAL + 1;
         blit_column(display_buffer + right_col * 2, level_col);

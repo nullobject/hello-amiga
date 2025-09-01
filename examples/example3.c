@@ -74,12 +74,12 @@ void cleanup(void) {
   reset_display();
 }
 
-void blit_column(uint8_t *dst, uint16_t tile) {
+void blit_column(uint8_t *dst, short tile) {
   uint8_t *p = dst;
 
-  for (int ly = 0; ly < VTILES; ly++) {
-    uint16_t tx = tile % tileset.header.num_tiles_h;
-    uint16_t ty = tile / tileset.header.num_tiles_h;
+  for (short ly = 0; ly < VTILES; ly++) {
+    short tx = tile % tileset.header.num_tiles_h;
+    short ty = tile / tileset.header.num_tiles_h;
     ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
     p += BYTES_PER_ROW * tileset.header.tile_height * tileset.header.bmdepth;
   }
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
   size_t display_buffer_size = PLANE_SIZE * NUM_BITPLANES;
   uint8_t __chip *display_buffer = AllocMem(display_buffer_size, MEMF_CHIP | MEMF_CLEAR);
 
-  if (!ratr0_read_tileset("tileset.ts", &tileset)) {
+  if (!ratr0_read_tileset("16c-tileset.ts", &tileset)) {
     puts("Could not read tile set");
     cleanup();
     return 1;
@@ -105,13 +105,13 @@ int main(int argc, char **argv) {
   }
 
   uint8_t num_colors = 1 << tileset.header.bmdepth;
-  for (int i = 0; i < num_colors; i++) {
+  for (short i = 0; i < num_colors; i++) {
     coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = tileset.palette[i];
   }
 
-  int coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
+  short coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
   uint32_t addr = (uint32_t)display_buffer;
-  for (int i = 0; i < NUM_BITPLANES; i++) {
+  for (short i = 0; i < NUM_BITPLANES; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 4; // next bitplane
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
   }
   OwnBlitter();
 
-  for (uint16_t lx = 0; lx < HTILES; lx++) {
+  for (short lx = 0; lx < HTILES; lx++) {
     blit_column(display_buffer + lx * 2, lx);
   }
 
