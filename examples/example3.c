@@ -4,9 +4,9 @@
 #include <hardware/dmabits.h>
 #include <stdio.h>
 
-#include "../src/ahpc_registers.h"
-#include "../src/common.h"
-#include "../src/tileset.h"
+#include "ahpc_registers.h"
+#include "common.h"
+#include "tileset.h"
 
 // 20 instead of 127 because of input.device priority
 #define TASK_PRIORITY 20
