@@ -1,47 +1,42 @@
 .PHONY: all clean
 .SECONDARY:
 
-ASSETS_DIR = assets
-BUILD_DIR = build
-EXAMPLES_DIR = examples
-TARGET_DIR = uae/dh0
-
 CONFIG = +kick13
-STARTUP_FILE = $(TARGET_DIR)/s/startup-sequence
+STARTUP_FILE = uae/dh0/s/startup-sequence
 
-EXAMPLES = $(wildcard $(EXAMPLES_DIR)/*.c)
-EXES = $(addprefix $(BUILD_DIR)/,$(notdir $(EXAMPLES:.c=)))
+EXAMPLES = $(wildcard examples/*.c)
+EXES = $(addprefix build/,$(notdir $(EXAMPLES:.c=)))
 C_SOURCES = $(wildcard src/*.c)
-OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+OBJECTS = $(addprefix build/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
 S_SOURCES = $(wildcard src/*.s)
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(S_SOURCES:.s=.o)))
+OBJECTS += $(addprefix build/,$(notdir $(S_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(S_SOURCES)))
 
 all: $(OBJECTS) $(EXES)
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET_DIR)
+	rm -rf build uae/dh0
 
-example%: $(BUILD_DIR)/example% $(TARGET_DIR)/tileset.ts $(TARGET_DIR)/level.lvl | $(TARGET_DIR)
-	cp $< $(TARGET_DIR)
-	echo sys:$@ > $(TARGET_DIR)/s/startup-sequence
+example%: build/example% uae/dh0/tileset.ts uae/dh0/level.lvl | uae/dh0
+	cp $< uae/dh0
+	echo sys:$@ > uae/dh0/s/startup-sequence
 	fs-uae --hard_drive_0=uae/dh0 --automatic_input_grab=0
 
-$(BUILD_DIR)/example%: $(EXAMPLES_DIR)/example%.c $(OBJECTS) | $(BUILD_DIR)
+build/example%: examples/example%.c $(OBJECTS) | build
 	vc $(CONFIG) -lamiga -lauto -g -I$(NDK_INC) -Isrc -o $@ $^
 
-$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+build/%.o: %.c | build
 	vc $(CONFIG) -c99 -g -c -I$(NDK_INC) -o $@ $<
 
-$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
+build/%.o: %.s | build
 	vc $(CONFIG) -g -c -o $@ $<
 
-$(TARGET_DIR)/tileset.ts $(TARGET_DIR)/level.lvl &: $(ASSETS_DIR)/tileset.json $(ASSETS_DIR)/map.json | $(TARGET_DIR)
-	ratr0-converttiled $^ $(TARGET_DIR)/tileset.ts $(TARGET_DIR)/level.lvl
+uae/dh0/tileset.ts uae/dh0/level.lvl &: assets/tileset.json assets/map.json | uae/dh0
+	ratr0-converttiled $^ uae/dh0/tileset.ts uae/dh0/level.lvl
 
-$(BUILD_DIR):
+build:
 	mkdir -p $@
 
-$(TARGET_DIR):
+uae/dh0:
 	mkdir -p $@/s
