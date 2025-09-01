@@ -16,12 +16,12 @@ vpath %.s $(sort $(dir $(S_SOURCES)))
 all: $(OBJECTS) $(EXES)
 
 clean:
-	rm -rf build uae/dh0
+	rm -rf build
 
-example%: build/example% uae/dh0/tileset.ts uae/dh0/level.lvl | uae/dh0
-	cp $< uae/dh0
-	echo sys:$@ > uae/dh0/s/startup-sequence
-	fs-uae --hard_drive_0=uae/dh0 --automatic_input_grab=0
+example%: build/example% build/tileset.ts build/level.lvl
+	mkdir -p build/s
+	echo sys:$@ > build/s/startup-sequence
+	fs-uae --hard_drive_0=build --automatic_input_grab=0
 
 build/example%: examples/example%.c $(OBJECTS) | build
 	vc $(CONFIG) -lamiga -lauto -g -I$(NDK_INC) -Isrc -o $@ $^
@@ -32,11 +32,8 @@ build/%.o: %.c | build
 build/%.o: %.s | build
 	vc $(CONFIG) -g -c -o $@ $<
 
-uae/dh0/tileset.ts uae/dh0/level.lvl &: assets/tileset.json assets/map.json | uae/dh0
-	ratr0-converttiled $^ uae/dh0/tileset.ts uae/dh0/level.lvl
+build/tileset.ts build/level.lvl &: assets/tileset.json assets/map.json | build
+	ratr0-converttiled $^ build/tileset.ts build/level.lvl
 
 build:
 	mkdir -p $@
-
-uae/dh0:
-	mkdir -p $@/s
