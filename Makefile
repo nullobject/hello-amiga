@@ -18,7 +18,7 @@ all: $(OBJECTS) $(EXES)
 clean:
 	rm -rf build
 
-example%: build/example% build/8c-tileset.ts build/8c-level.lvl build/16c-tileset.ts build/16c-level.lvl
+example%: build/example% build/8c-tileset.ts build/8c-level.lvl build/32c-tileset.ts build/32c-level.lvl
 	mkdir -p build/s
 	echo sys:$@ > build/s/startup-sequence
 	fs-uae --hard_drive_0=build --automatic_input_grab=0
@@ -35,8 +35,8 @@ build/%.o: %.s | build
 build/8c-tileset.ts build/8c-level.lvl &: assets/8c-tiles.png assets/8c-tileset.json assets/8c-map.json | build
 	ratr0-converttiled assets/8c-tileset.json assets/8c-map.json build/8c-tileset.ts build/8c-level.lvl
 
-build/16c-tileset.ts build/16c-level.lvl &: assets/16c-tiles.png assets/16c-tileset.json assets/16c-map.json | build
-	ratr0-converttiled assets/16c-tileset.json assets/16c-map.json build/16c-tileset.ts build/16c-level.lvl
+build/32c-tileset.ts build/32c-level.lvl &: assets/32c-tiles.png assets/32c-tileset.json assets/32c-map.json | build
+	ratr0-converttiled assets/32c-tileset.json assets/32c-map.json build/32c-tileset.ts build/32c-level.lvl
 
 build:
 	mkdir -p $@
