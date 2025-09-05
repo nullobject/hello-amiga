@@ -46,6 +46,7 @@
 extern struct Custom custom;
 
 struct Ratr0Tileset tileset;
+struct Ratr0Level level;
 
 uint16_t __chip coplist[] = {
     // set fetch mode = 0
@@ -75,6 +76,14 @@ uint16_t __chip coplist[] = {
     COP_MOVE(BPL5PTH, 0), COP_MOVE(BPL5PTL, 0),
     COP_MOVE(BPL6PTH, 0), COP_MOVE(BPL6PTL, 0),
 
+    COP_MOVE(COLOR00, 0x468),
+    0x3c01, 0xff00,
+    COP_MOVE(COLOR00, 0x479),
+    0x4c01, 0xff00,
+    COP_MOVE(COLOR00, 0x48a),
+    0x5c01, 0xff00,
+    COP_MOVE(COLOR00, 0x49b),
+
     COP_WAIT_END};
 
 void cleanup(void) {
@@ -82,10 +91,11 @@ void cleanup(void) {
   reset_display();
 }
 
-void blit_column(uint8_t *dst, short tile) {
+void blit_column(uint8_t *dst, short lx) {
   uint8_t *p = dst;
 
   for (short ly = 0; ly < VTILES; ly++) {
+    short tile = level.lvldata[ly * level.header.width + lx] - 1;
     short tx = tile % tileset.header.num_tiles_h;
     short ty = tile / tileset.header.num_tiles_h;
     ratr0_blit_tile(p, DMOD, &tileset, tx, ty);
@@ -102,6 +112,12 @@ int main(int argc, char **argv) {
 
   if (!ratr0_read_tileset("8c-tileset.ts", &tileset)) {
     puts("Could not read tile set");
+    cleanup();
+    return 1;
+  }
+
+  if (!ratr0_read_level("8c-level.lvl", &level)) {
+    puts("Could not read level");
     cleanup();
     return 1;
   }
@@ -137,13 +153,9 @@ int main(int argc, char **argv) {
 
   OwnBlitter();
 
-  blit_column(fg_buffer + 0, 0);
-  blit_column(bg_buffer + 2, 0);
-  blit_column(fg_buffer + 4, 4);
-  blit_column(bg_buffer + 6, 4);
-  // for (short lx = 0; lx < HTILES; lx++) {
-  //   blit_column(fg_buffer + lx * 2, lx);
-  // }
+  for (short lx = 0; lx < HTILES; lx++) {
+    blit_column(fg_buffer + lx * 2, lx);
+  }
 
   // Disable sprite DMA
   custom.dmacon = DMAF_SPRITE;
