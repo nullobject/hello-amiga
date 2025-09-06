@@ -39,7 +39,7 @@ build/32c-tileset.ts build/32c-level.lvl &: assets/32c-tiles.png assets/32c-tile
 	ratr0-converttiled assets/32c-tileset.json assets/32c-map.json build/32c-tileset.ts build/32c-level.lvl
 
 build/rodland_bobs.ts: assets/rodland_bobs.png | build
-	ratr0-maketiles -ts 44x31 assets/rodland_bobs.png build/rodland_bobs.ts
+	ratr0-maketiles -ts 44x31 -cm assets/rodland_bobs.png build/rodland_bobs.ts
 
 build:
 	mkdir -p $@

@@ -164,15 +164,15 @@ void blit_object(struct Ratr0Tileset *bobs, uint8_t *dst, short tilex, short til
   // B = Tile sheet
   // C = Background
   // D = Background
-  custom.bltcon0 = 0x09f0 | (dst_shift << 12);
+  custom.bltcon0 = 0x0fca | (dst_shift << 12);
   custom.bltcon1 = dst_shift << 12;
 
   // modulos are in bytes
   uint16_t srcmod = bobs->header.width / 8 - (final_blit_width * 2);
   uint16_t dstmod = BYTES_PER_ROW - (final_blit_width * 2);
   custom.bltamod = srcmod;
-  // custom.bltbmod = srcmod;
-  // custom.bltcmod = dstmod;
+  custom.bltbmod = srcmod;
+  custom.bltcmod = dstmod;
   custom.bltdmod = dstmod;
 
   // The blit size is the size of a plane of the tile size (1 word * 16)
@@ -185,13 +185,13 @@ void blit_object(struct Ratr0Tileset *bobs, uint8_t *dst, short tilex, short til
   short bobs_plane_size = bobs->header.width / 8 * bobs->header.height;
 
   uint8_t *src = bobs->imgdata + srcy * bobs->header.width / 8 + srcx / 8;
-  // uint8_t *mask = bobs->imgdata + bobs_plane_size * bobs->header.bmdepth + srcy * bobs->header.width / 8 + srcx / 8;
+  uint8_t *mask = bobs->imgdata + bobs_plane_size * bobs->header.bmdepth + srcy * bobs->header.width / 8 + srcx / 8;
   uint8_t *p = dst + dsty * NUM_BITPLANES * BYTES_PER_ROW + dstx / 8 + dst_offset;
 
-  custom.bltapt = src;
+  custom.bltapt = mask;
+  custom.bltbpt = src;
+  custom.bltcpt = p;
   custom.bltdpt = p;
-  custom.bltbdat = 0xffff;
-  custom.bltcdat = 0xffff;
   custom.bltsize = bltsize;
 }
 
@@ -259,8 +259,8 @@ int main(int argc, char **argv) {
     blit_column(bg_buffer + lx * 2, lx);
   }
 
-  // blit_object(&bobs, fg_buffer, 0, 0, 160, 97);
-  blit_object(&bobs, fg_buffer, 0, 0, 166, 97);
+  blit_object(&bobs, fg_buffer, 0, 0, 170, 97);
+  blit_object(&bobs, fg_buffer, 0, 0, 180, 97);
 
   DisownBlitter();
 
