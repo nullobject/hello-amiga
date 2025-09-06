@@ -1,3 +1,7 @@
+/**
+ * Copper list that changes the background color every third of the screen.
+ */
+
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
 #include <hardware/custom.h>

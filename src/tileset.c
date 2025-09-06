@@ -25,8 +25,9 @@ bool ratr0_read_tileset(const char *filename, struct Ratr0Tileset *tileset) {
 }
 
 void ratr0_free_tileset_data(struct Ratr0Tileset *tileset) {
-  if (tileset && tileset->imgdata)
+  if (tileset && tileset->imgdata) {
     FreeMem(tileset->imgdata, tileset->header.imgdata_size);
+  }
 }
 
 void ratr0_blit_tile(uint8_t *dst, uint16_t dmod, struct Ratr0Tileset *tileset, uint16_t tx, uint16_t ty) {
@@ -52,7 +53,7 @@ void ratr0_blit_tile(uint8_t *dst, uint16_t dmod, struct Ratr0Tileset *tileset, 
   custom.bltbdat = 0xffff;
   custom.bltcdat = 0xffff;
 
-  custom.bltsize = (uint16_t)(height << 6) | (num_words & 0x3f);
+  custom.bltsize = (height << 6) | (num_words & 0x3f);
 }
 
 bool ratr0_read_level(const char *filename, struct Ratr0Level *level) {

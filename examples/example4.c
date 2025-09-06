@@ -1,3 +1,7 @@
+/**
+ * 5BPP scrolling tilemap.
+ */
+
 #include <clib/alib_protos.h>
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>

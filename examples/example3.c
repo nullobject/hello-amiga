@@ -1,3 +1,7 @@
+/**
+ * 5BPP tilemap.
+ */
+
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
 #include <hardware/custom.h>
