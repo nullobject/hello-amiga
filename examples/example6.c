@@ -22,7 +22,7 @@
 #define DDFSTRT_VALUE 0x0038
 #define DDFSTOP_VALUE 0x00d0
 
-#define BPLCON0_VALUE 0x3200
+#define BPLCON0_VALUE 0x6600
 #define BPLCON1_VALUE 0x0000
 #define BPLCON2_VALUE 0x0048
 
@@ -108,18 +108,20 @@ void blit_object(struct Ratr0Tileset *bobs, uint8_t *dst, short tilex, short til
   short tile_x0 = bobs->header.tile_width * tilex & 0x0f;
 
   // 1. determine how wide the blit actually is
-  short blit_width = tile_width_pixels / 16;
+  short blit_width = tile_width_pixels >> 4;
 
   // width not a multiple of 16 ? -> add 1 to the width
-  if (tile_width_pixels & 0x0f)
+  if (tile_width_pixels & 0x0f) {
     blit_width++;
+  }
 
-  short blit_width0_pixels = blit_width * 16; // blit width in pixels
+  short blit_width0_pixels = blit_width << 4; // blit width in pixels
 
   // Final source blit width: does the tile extend into an additional word ?
   short src_blit_width = blit_width;
-  if (tile_x0 > blit_width0_pixels - tile_width_pixels)
+  if (tile_x0 > blit_width0_pixels - tile_width_pixels) {
     src_blit_width++;
+  }
 
   // 2. Determine the amount of shift and the first word in the
   // destination
@@ -162,19 +164,19 @@ void blit_object(struct Ratr0Tileset *bobs, uint8_t *dst, short tilex, short til
   // B = Tile sheet
   // C = Background
   // D = Background
-  custom.bltcon0 = 0x0fca | (dst_shift << 12);
-  custom.bltcon1 = dst_shift << 12; // shift in B
+  custom.bltcon0 = 0x09f0 | (dst_shift << 12);
+  custom.bltcon1 = dst_shift << 12;
 
   // modulos are in bytes
   uint16_t srcmod = bobs->header.width / 8 - (final_blit_width * 2);
-  uint16_t dstmod = 320 / 8 - (final_blit_width * 2);
+  uint16_t dstmod = BYTES_PER_ROW - (final_blit_width * 2);
   custom.bltamod = srcmod;
-  custom.bltbmod = srcmod;
-  custom.bltcmod = dstmod;
+  // custom.bltbmod = srcmod;
+  // custom.bltcmod = dstmod;
   custom.bltdmod = dstmod;
 
   // The blit size is the size of a plane of the tile size (1 word * 16)
-  uint16_t bltsize = (bobs->header.tile_height << 6) | (final_blit_width & 0x3f);
+  uint16_t bltsize = ((bobs->header.tile_height * bobs->header.bmdepth) << 6) | (final_blit_width & 0x3f);
 
   // map the tile position to physical coordinates in the tile sheet
   short srcx = tilex * bobs->header.tile_width;
@@ -183,23 +185,14 @@ void blit_object(struct Ratr0Tileset *bobs, uint8_t *dst, short tilex, short til
   short bobs_plane_size = bobs->header.width / 8 * bobs->header.height;
 
   uint8_t *src = bobs->imgdata + srcy * bobs->header.width / 8 + srcx / 8;
-  // The mask data is the plane after the source image planes
-  uint8_t *mask = bobs->imgdata + bobs_plane_size * bobs->header.bmdepth + srcy * bobs->header.width / 8 + srcx / 8;
-  uint8_t *p = dst + dsty * 320 / 8 + dstx / 8 + dst_offset;
+  // uint8_t *mask = bobs->imgdata + bobs_plane_size * bobs->header.bmdepth + srcy * bobs->header.width / 8 + srcx / 8;
+  uint8_t *p = dst + dsty * NUM_BITPLANES * BYTES_PER_ROW + dstx / 8 + dst_offset;
 
-  for (short i = 0; i < bobs->header.bmdepth; i++) {
-    custom.bltapt = mask;
-    custom.bltbpt = src;
-    custom.bltcpt = p;
-    custom.bltdpt = p;
-    custom.bltsize = bltsize;
-
-    // Increase the pointers to the next plane
-    src += bobs_plane_size;
-    p += BYTES_PER_ROW * bobs->header.tile_height;
-
-    WaitBlit();
-  }
+  custom.bltapt = src;
+  custom.bltdpt = p;
+  custom.bltbdat = 0xffff;
+  custom.bltcdat = 0xffff;
+  custom.bltsize = bltsize;
 }
 
 int main(int argc, char **argv) {
@@ -233,30 +226,28 @@ int main(int argc, char **argv) {
     coplist[COPLIST_IDX_DIWSTOP_VALUE] = DIWSTOP_VALUE_NTSC;
   }
 
-  short num_colors = 1 << tileset.header.bmdepth;
+  short num_colors = 1 << NUM_BITPLANES;
   for (short i = 0; i < num_colors; i++) {
-    coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = bobs.palette[i];
+    coplist[COPLIST_IDX_COLOR00_VALUE + (i << 1)] = tileset.palette[i];
     coplist[COPLIST_IDX_COLOR08_VALUE + (i << 1)] = bobs.palette[i];
   }
 
   short coplist_idx = COPLIST_IDX_BPL1PTH_VALUE;
-  uint32_t addr = (uint32_t)fg_buffer;
+  uint32_t addr = (uint32_t)bg_buffer;
   for (short i = 0; i < NUM_BITPLANES; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 8; // next bitplane
     addr += BYTES_PER_ROW;
-    // addr += PLANE_SIZE;
   }
 
   coplist_idx = COPLIST_IDX_BPL2PTH_VALUE;
-  addr = (uint32_t)bg_buffer;
+  addr = (uint32_t)fg_buffer;
   for (short i = 0; i < NUM_BITPLANES; i++) {
     coplist[coplist_idx] = (addr >> 16) & 0xffff;
     coplist[coplist_idx + 2] = addr & 0xffff;
     coplist_idx += 8; // next bitplane
     addr += BYTES_PER_ROW;
-    // addr += PLANE_SIZE;
   }
 
   // Disable sprite DMA
@@ -268,7 +259,8 @@ int main(int argc, char **argv) {
     blit_column(bg_buffer + lx * 2, lx);
   }
 
-  blit_object(&bobs, fg_buffer, 0, 0, 64, 64);
+  // blit_object(&bobs, fg_buffer, 0, 0, 160, 97);
+  blit_object(&bobs, fg_buffer, 0, 0, 166, 97);
 
   DisownBlitter();
 
